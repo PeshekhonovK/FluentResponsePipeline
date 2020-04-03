@@ -1,4 +1,4 @@
-# FluentResponsePipeline
+# Fluent Response Pipeline
 
 [![Build](https://dev.azure.com/kpeshekhonov/FluentResponsePipeline/_apis/build/status/PeshekhonovK.FluentResponsePipeline?branchName=master)](https://kpeshekhonov.visualstudio.com/FluentResponsePipeline/_build/latest?definitionId=4&branchName=master)
         
