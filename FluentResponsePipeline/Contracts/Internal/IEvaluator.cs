@@ -5,6 +5,6 @@ namespace FluentResponsePipeline.Contracts.Internal
 {
     internal interface IEvaluator<TResult>
     {
-        Task<IResponse<TResult>> GetResult(IObjectLogger logger);
+        Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer);
     }
 }

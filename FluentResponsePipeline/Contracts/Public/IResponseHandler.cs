@@ -27,12 +27,14 @@ namespace FluentResponsePipeline.Contracts.Public
         /// Do not process any further registered methods if any error or exception occured
         /// </summary>
         /// <param name="page">Page or controller context of request</param>
+        /// <param name="responseComposer">Helper class to create correct <see cref="IResponse{TResult}" objects/></param>
         /// <param name="onSuccess">Optional success handler</param>
         /// <param name="onError">Optional error handler</param>
         /// <typeparam name="TPage">Context object of handling the result, should be inherited from type <see cref="IPageModelBase{TActionResult}"/></typeparam>
         /// <returns></returns>
         Task<TActionResult> Evaluate<TPage>(
             TPage page, 
+            IResponseComposer responseComposer, 
             Func<TResult, TPage, TActionResult>? onSuccess = null, 
             Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
                 where TPage : IPageModelBase<TActionResult>;

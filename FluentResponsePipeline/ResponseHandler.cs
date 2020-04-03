@@ -43,24 +43,24 @@ namespace FluentResponsePipeline
             return new ResponseHandler<TResult, TToResult, TActionResult>(this, handler);
         }
 
-        public async Task<IResponse<TResult>> GetResult(IObjectLogger logger)
+        public async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(this.Parent != null);
             Debug.Assert(this.Request != null || this.Handler != null);
 
-            var parentResult = await this.Parent.GetResult(logger);
+            var parentResult = await this.Parent.GetResult(logger, responseComposer);
 
             if (!parentResult.Succeeded)
             {
-                return new Response<TResult>(parentResult);
+                return responseComposer.From<TFrom, TResult>(parentResult);
             }
 
-            var response = await this.GetResponse(parentResult, logger);
+            var response = await this.GetResponse(parentResult, logger, responseComposer);
 
             return ProcessResponse(logger, response);
         }
 
-        private async Task<IResponse<TResult>> GetResponse(IResponse<TFrom> parentResult, IObjectLogger logger)
+        private async Task<IResponse<TResult>> GetResponse(IResponse<TFrom> parentResult, IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(parentResult != null);
 
@@ -69,25 +69,26 @@ namespace FluentResponsePipeline
                 return this.Request != null
                     ? await this.Request(parentResult.Payload)
                     : this.Handler != null
-                        ? Response<TResult>.Success(this.Handler(parentResult.Payload))
+                        ? responseComposer.Success<TResult>(this.Handler(parentResult.Payload))
                         : throw new InvalidOperationException($"Both Provider and Handler are null");
             }
             catch (Exception e)
             {
                 logger.LogCritical(e);
-                return Response<TResult>.Error(e);
+                return responseComposer.Error<TResult>(e);
             }
         }
 
         public async Task<TActionResult> Evaluate<TPage>(
             TPage page, 
+            IResponseComposer responseComposer, 
             Func<TResult, TPage, TActionResult>? onSuccess = null, 
             Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
             where TPage : IPageModelBase<TActionResult>
         {
             Debug.Assert(page != null);
 
-            var result = await this.GetResult(page.Logger);
+            var result = await this.GetResult(page.Logger, responseComposer);
 
             Debug.Assert(result != null);
 

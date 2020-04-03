@@ -20,7 +20,7 @@ namespace FluentResponsePipeline
             this.Request = request;
         }
             
-        public async Task<IResponse<TResult>> GetResult(IObjectLogger logger)
+        public async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(logger != null);
                 
@@ -31,7 +31,7 @@ namespace FluentResponsePipeline
             catch (Exception e)
             {
                 logger.LogCritical(e);
-                return Response<TResult>.Error(e);
+                return responseComposer.Error<TResult>(e);
             }
         }
         
@@ -40,11 +40,6 @@ namespace FluentResponsePipeline
             Debug.Assert(handler != null);
 
             return new ResponseHandler<TResult, TChildTo, TActionResult>(this, handler);
-        }
-
-        public IResponseHandler<TToResult, TActionResult> Process<TPrevResult, TToResult>(Func<TPrevResult, TResult, TToResult> handler)
-        {
-            throw new NotImplementedException();
         }
 
         public IResponseHandler<TResultTo, TActionResult> With<TResultTo>(Func<TResult, Task<IResponse<TResultTo>>> request)
@@ -56,11 +51,12 @@ namespace FluentResponsePipeline
 
         public async Task<TActionResult> Evaluate<TPage>(
             TPage page, 
+            IResponseComposer responseComposer, 
             Func<TResult, TPage, TActionResult>? onSuccess = null, 
             Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
             where TPage : IPageModelBase<TActionResult>
         {
-            var result = await this.GetResult(page.Logger);
+            var result = await this.GetResult(page.Logger, responseComposer);
                 
             Debug.Assert(result != null);
 
