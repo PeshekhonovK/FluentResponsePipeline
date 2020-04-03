@@ -25,23 +25,23 @@ namespace FluentResponsePipeline
         }
 
         protected internal static TActionResult ApplyToPage<TPage>(
-            IResponse<TResult> result, 
+            IResponse<TResult> response, 
             TPage page, 
             Func<TResult, TPage, TActionResult>? onSuccess = null, 
             Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
             where TPage : IPageModelBase<TActionResult>
         {
-            if (result.StatusCode == HttpStatusCode.OK && onSuccess != null)
+            if (response.Succeeded && onSuccess != null)
             {
-                return onSuccess(result.Payload, page);
+                return onSuccess(response.Payload, page);
             }
 
-            if (result.StatusCode != HttpStatusCode.OK && onError != null)
+            if (!response.Succeeded && onError != null)
             {
-                return onError(result, page);
+                return onError(response, page);
             }
 
-            return page.Return(result);
+            return page.Return(response);
         }
     }
 }
