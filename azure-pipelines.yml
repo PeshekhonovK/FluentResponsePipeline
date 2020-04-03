@@ -34,5 +34,5 @@ steps:
      **\$(BuildConfiguration)\**\*.Tests.Unit.dll
      !**\obj\**
     platform: '$(BuildPlatform)'
-    pathtoCustomTestAdapters: 'FluentResponsePipeline.Tests.Unit\bin\Release\netcoreapp3.1\NUnit3.TestAdapter.dll\'
+    pathtoCustomTestAdapters: 'FluentResponsePipeline.Tests.Unit\bin\Release\netcoreapp3.1\'
     configuration: '$(BuildConfiguration)'
