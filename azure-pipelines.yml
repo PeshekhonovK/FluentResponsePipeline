@@ -31,7 +31,8 @@ steps:
 - task: VSTest@2
   inputs:    
     testAssemblyVer2: |
-     **\$(BuildConfiguration)\*.Tests.Unit.dll
+     **\$(BuildConfiguration)\**\*.Tests.Unit.dll
      !**\obj\**
     platform: '$(BuildPlatform)'
+    pathtoCustomTestAdapters: 'FluentResponsePipeline.Tests.Unit\bin\Release\netcoreapp3.1\NUnit3.TestAdapter.dll\'
     configuration: '$(BuildConfiguration)'
