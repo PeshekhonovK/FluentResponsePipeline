@@ -5,9 +5,9 @@ using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline
 {
-    internal class ResponseHandlerBase<TResult, TActionResult>
+    internal abstract class ResponseHandlerBase<TResult, TActionResult>
     {
-        protected static IResponse<TResult> ProcessResponse(IObjectLogger logger, IResponse<TResult> response)
+        protected internal static IResponse<TResult> ProcessResponse(IObjectLogger logger, IResponse<TResult> response)
         {
             Debug.Assert(logger != null);
             Debug.Assert(response != null);
@@ -24,7 +24,7 @@ namespace FluentResponsePipeline
             return response;
         }
 
-        protected static TActionResult ApplyToPage<TPage>(
+        protected internal static TActionResult ApplyToPage<TPage>(
             IResponse<TResult> result, 
             TPage page, 
             Func<TResult, TPage, TActionResult>? onSuccess = null, 

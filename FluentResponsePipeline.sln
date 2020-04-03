@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentResponsePipeline", "FluentResponsePipeline\FluentResponsePipeline.csproj", "{650418CA-EAD5-4A2B-B6D2-5CA20C8DD3C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentResponsePipeline.Tests.Unit", "FluentResponsePipeline.Tests.Unit\FluentResponsePipeline.Tests.Unit.csproj", "{755A886F-A696-49E2-8CEE-E75CD1B30388}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{650418CA-EAD5-4A2B-B6D2-5CA20C8DD3C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{650418CA-EAD5-4A2B-B6D2-5CA20C8DD3C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{650418CA-EAD5-4A2B-B6D2-5CA20C8DD3C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{755A886F-A696-49E2-8CEE-E75CD1B30388}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{755A886F-A696-49E2-8CEE-E75CD1B30388}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{755A886F-A696-49E2-8CEE-E75CD1B30388}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{755A886F-A696-49E2-8CEE-E75CD1B30388}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
