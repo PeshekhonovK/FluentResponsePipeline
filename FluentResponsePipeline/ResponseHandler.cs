@@ -57,7 +57,7 @@ namespace FluentResponsePipeline
 
             var response = await this.GetResponse(parentResult, logger, responseComposer);
 
-            return ProcessResponse(logger, response);
+            return this.ProcessResponse(logger, response);
         }
 
         private async Task<IResponse<TResult>> GetResponse(IResponse<TFrom> parentResult, IObjectLogger logger, IResponseComposer responseComposer)
@@ -92,7 +92,7 @@ namespace FluentResponsePipeline
 
             Debug.Assert(result != null);
 
-            return ApplyToPage(result, page, onSuccess, onError);
+            return this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }

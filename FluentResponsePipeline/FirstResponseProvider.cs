@@ -20,13 +20,13 @@ namespace FluentResponsePipeline
             this.Request = request;
         }
             
-        public async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
+        public virtual async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(logger != null);
                 
             try
             {
-                return ProcessResponse(logger, await this.Request());
+                return this.ProcessResponse(logger, await this.Request());
             }
             catch (Exception e)
             {
@@ -60,7 +60,7 @@ namespace FluentResponsePipeline
                 
             Debug.Assert(result != null);
 
-            return ApplyToPage<TPage>(result, page, onSuccess, onError);
+            return this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }

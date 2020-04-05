@@ -10,10 +10,10 @@ namespace FluentResponsePipeline.Tests.Unit
             return new Mock<TObject>().Object;
         }
 
-        protected static TObject GetPartialMock<TObject>() 
+        protected static TObject GetPartialMock<TObject>(params object[] args) 
             where TObject : class
         {
-            return new Mock<TObject>() { CallBase = true }.Object;
+            return new Mock<TObject>(args) { CallBase = true }.Object;
         }
     }
 }

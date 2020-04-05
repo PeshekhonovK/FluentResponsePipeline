@@ -7,7 +7,7 @@ namespace FluentResponsePipeline
 {
     internal abstract class ResponseHandlerBase<TResult, TActionResult>
     {
-        protected internal static IResponse<TResult> ProcessResponse(IObjectLogger logger, IResponse<TResult> response)
+        protected internal virtual IResponse<TResult> ProcessResponse(IObjectLogger logger, IResponse<TResult> response)
         {
             Debug.Assert(logger != null);
             Debug.Assert(response != null);
@@ -24,7 +24,7 @@ namespace FluentResponsePipeline
             return response;
         }
 
-        protected internal static TActionResult ApplyToPage<TPage>(
+        protected internal virtual TActionResult ApplyToPage<TPage>(
             IResponse<TResult> response, 
             TPage page, 
             Func<TResult, TPage, TActionResult>? onSuccess = null, 

@@ -6,6 +6,7 @@ using NUnit.Framework;
 
 namespace FluentResponsePipeline.Tests.Unit
 {
+    [TestFixture]
     public class ResponseHandlerBaseTests : TestBase
     {
         [Test]
@@ -17,8 +18,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var response = GetMock<IResponse<object>>();
             response.Setup(x => x.Succeeded).Returns(false);
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+            
             // Act
-            var result = ResponseHandlerBase<object, object>.ProcessResponse(logger, response);
+            var result = handler.ProcessResponse(logger, response);
             
             // Assert
             result.Should().Be(response);
@@ -35,8 +38,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var response = GetMock<IResponse<object>>();
             response.Setup(x => x.Succeeded).Returns(true);
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ProcessResponse(logger, response);
+            var result = handler.ProcessResponse(logger, response);
             
             // Assert
             result.Should().Be(response);
@@ -57,8 +62,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(expected);
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page);
+            var result = handler.ApplyToPage(response, page);
             
             // Assert
             result.Should().Be(expected);
@@ -78,8 +85,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(expected);
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page, onError: errorHandler);
+            var result = handler.ApplyToPage(response, page, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
@@ -99,8 +108,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(expected);
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page, onSuccess: successHandler);
+            var result = handler.ApplyToPage(response, page, onSuccess: successHandler);
             
             // Assert
             result.Should().Be(expected);
@@ -120,8 +131,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page, onSuccess: successHandler);
+            var result = handler.ApplyToPage(response, page, onSuccess: successHandler);
             
             // Assert
             result.Should().Be(expected);
@@ -141,8 +154,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page, onError: errorHandler);
+            var result = handler.ApplyToPage(response, page, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
@@ -163,8 +178,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
+            var result = handler.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
@@ -185,8 +202,10 @@ namespace FluentResponsePipeline.Tests.Unit
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
 
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+
             // Act
-            var result = ResponseHandlerBase<object, object>.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
+            var result = handler.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
