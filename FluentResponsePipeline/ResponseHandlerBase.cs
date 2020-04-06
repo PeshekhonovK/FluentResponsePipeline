@@ -7,6 +7,18 @@ namespace FluentResponsePipeline
 {
     internal abstract class ResponseHandlerBase<TResult, TActionResult>
     {
+        private bool IsLocked { get; set; } = false;
+
+        protected void VerifyAndLock()
+        {
+            if (this.IsLocked)
+            {
+                throw new InvalidOperationException($"This handler already has a child");
+            }
+            
+            this.IsLocked = true;
+        }
+        
         protected internal virtual IResponse<TResult> ProcessResponse(IObjectLogger logger, IResponse<TResult> response)
         {
             Debug.Assert(logger != null);

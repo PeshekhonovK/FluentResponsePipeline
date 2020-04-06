@@ -6,61 +6,87 @@ using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline
 {
-    internal class ResponseHandler<TFrom, TResult, TActionResult> : 
+    internal class ResponseHandler<TFrom, TRequestResult, TResult, TActionResult> : 
         ResponseHandlerBase<TResult, TActionResult>, 
         IEvaluator<TResult>,
-        IResponseHandler<TResult, TActionResult>
+        IResponseHandler<TFrom, TRequestResult, TResult, TActionResult>,
+        IResponseHandlerWithTransform<TFrom, TRequestResult, TResult, TActionResult>
     {
         private IEvaluator<TFrom> Parent { get; }
 
-        private Func<TFrom, Task<IResponse<TResult>>>? Request { get; }
+        private Func<TFrom, Task<IResponse<TRequestResult>>>? Request { get; }
+        
+        private Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> Transform { get; }
 
-        private Func<TFrom, TResult>? Handler { get; }
-
-        public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, Task<IResponse<TResult>>> request)
+        public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, Task<IResponse<TRequestResult>>> request, Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> transform)
         {
             this.Parent = parent ?? throw new ArgumentNullException(nameof(parent));
             this.Request = request ?? throw new ArgumentNullException(nameof(request));
+            this.Transform = transform ?? throw new ArgumentNullException(nameof(transform));
         }
 
-        public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, TResult> handler)
+        private ResponseHandler(
+            IEvaluator<TFrom> parent, 
+            Func<TFrom, Task<IResponse<TRequestResult>>>? request, 
+            Func<TFrom, TRequestResult>? handler,
+            Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> transform)
         {
-            this.Parent = parent ?? throw new ArgumentNullException(nameof(parent));
-            this.Handler = handler ?? throw new ArgumentNullException(nameof(handler));
+            this.Parent = parent;
+            this.Request = request;
+            this.Transform = transform;
         }
 
-        public IResponseHandler<TToResult, TActionResult> With<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
+        public IResponseHandler<TResult, TToResult, TToResult, TActionResult> With<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
         {
             Debug.Assert(request != null);
+            
+            this.VerifyAndLock();
 
-            return new ResponseHandler<TResult, TToResult, TActionResult>(this, request);
+            return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response) => response);
         }
 
-        public IResponseHandler<TToResult, TActionResult> Process<TToResult>(Func<TResult, TToResult> handler)
+        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> AddTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
         {
-            Debug.Assert(handler != null);
+            Debug.Assert(transform != null);
+            
+            this.VerifyAndLock();
 
-            return new ResponseHandler<TResult, TToResult, TActionResult>(this, handler);
+            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, transform);
+        }
+
+        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        {
+            return this.AddTransform(transform);
         }
 
         public async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(this.Parent != null);
-            Debug.Assert(this.Request != null || this.Handler != null);
+            Debug.Assert(this.Request != null);
 
-            var parentResult = await this.Parent.GetResult(logger, responseComposer);
-
-            if (!parentResult.Succeeded)
+            try
             {
-                return responseComposer.From<TFrom, TResult>(parentResult);
+                var parentResult = await this.Parent.GetResult(logger, responseComposer);
+
+                if (!parentResult.Succeeded)
+                {
+                    return responseComposer.From<TFrom, TResult>(parentResult);
+                }
+
+                var response = await this.GetResponse(parentResult, logger, responseComposer);
+
+                var transformedResult = this.Transform(parentResult, response);
+
+                return this.ProcessResponse(logger, transformedResult);
             }
-
-            var response = await this.GetResponse(parentResult, logger, responseComposer);
-
-            return this.ProcessResponse(logger, response);
+            catch (Exception e)
+            {
+                logger.LogCritical(e);
+                return responseComposer.Error<TResult>(e);
+            }
         }
 
-        private async Task<IResponse<TResult>> GetResponse(IResponse<TFrom> parentResult, IObjectLogger logger, IResponseComposer responseComposer)
+        private async Task<IResponse<TRequestResult>> GetResponse(IResponse<TFrom> parentResult, IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(parentResult != null);
 
@@ -68,14 +94,12 @@ namespace FluentResponsePipeline
             {
                 return this.Request != null
                     ? await this.Request(parentResult.Payload)
-                    : this.Handler != null
-                        ? responseComposer.Success<TResult>(this.Handler(parentResult.Payload))
-                        : throw new InvalidOperationException($"Both Provider and Handler are null");
+                    : throw new InvalidOperationException($"Both Provider is null");
             }
             catch (Exception e)
             {
                 logger.LogCritical(e);
-                return responseComposer.Error<TResult>(e);
+                return responseComposer.Error<TRequestResult>(e);
             }
         }
 

@@ -6,27 +6,35 @@ using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline
 {
-    internal class FirstResponseProvider<TResult, TActionResult> 
+    internal class FirstResponseProvider<TRequestResult, TResult, TActionResult> 
         : ResponseHandlerBase<TResult, TActionResult>,
             IEvaluator<TResult>, 
-            IResponseHandler<TResult, TActionResult>
+            IFirstResponseHandler<TRequestResult, TResult, TActionResult>,
+            IFirstResponseHandlerWithTransform<TRequestResult, TResult, TActionResult>
     {
-        private Func<Task<IResponse<TResult>>> Request { get; }
+        private Func<Task<IResponse<TRequestResult>>> Request { get; }
+        
+        private Func<IResponse<TRequestResult>, IResponse<TResult>> Transform { get; }
             
-        public FirstResponseProvider(Func<Task<IResponse<TResult>>> request)
+        public FirstResponseProvider(Func<Task<IResponse<TRequestResult>>> request, Func<IResponse<TRequestResult>, IResponse<TResult>> transform)
         {
             Debug.Assert(request != null);
                 
             this.Request = request;
+            this.Transform = transform;
         }
-            
+        
         public virtual async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(logger != null);
-                
+            
             try
             {
-                return this.ProcessResponse(logger, await this.Request());
+                var requestResult = await this.GetResponse(logger, responseComposer);
+
+                Debug.Assert(requestResult != null);
+                
+                return this.ProcessResponse(logger, this.Transform(requestResult));
             }
             catch (Exception e)
             {
@@ -34,19 +42,41 @@ namespace FluentResponsePipeline
                 return responseComposer.Error<TResult>(e);
             }
         }
-        
-        public IResponseHandler<TChildTo, TActionResult> Process<TChildTo>(Func<TResult, TChildTo> handler)
-        {
-            Debug.Assert(handler != null);
 
-            return new ResponseHandler<TResult, TChildTo, TActionResult>(this, handler);
+        private async Task<IResponse<TRequestResult>> GetResponse(IObjectLogger logger, IResponseComposer responseComposer)
+        {
+            try
+            {
+                return await this.Request();
+            }
+            catch (Exception e)
+            {
+                logger.LogCritical(e);
+                return responseComposer.Error<TRequestResult>(e);
+            }
         }
 
-        public IResponseHandler<TResultTo, TActionResult> With<TResultTo>(Func<TResult, Task<IResponse<TResultTo>>> request)
+        public IResponseHandler<TResult, TToResult, TToResult, TActionResult> With<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
         {
             Debug.Assert(request != null);
+            
+            this.VerifyAndLock();
+            
+            return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response) => response);
+        }
 
-            return new ResponseHandler<TResult, TResultTo, TActionResult>(this, request);
+        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> AddTransform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        {
+            Debug.Assert(transform != null);
+            
+            this.VerifyAndLock();
+
+            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, transform);
+        }
+
+        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        {
+            return this.AddTransform(transform);
         }
 
         public async Task<TActionResult> Evaluate<TPage>(

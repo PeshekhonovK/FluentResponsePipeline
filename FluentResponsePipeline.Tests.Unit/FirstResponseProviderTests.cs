@@ -1,7 +1,4 @@
 using System;
-using System.Globalization;
-using System.Net;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentResponsePipeline.Contracts.Public;
@@ -23,7 +20,7 @@ namespace FluentResponsePipeline.Tests.Unit
             
             var expected = GetMock<IResponse<object>>();
             
-            var provider = GetPartialMock<FirstResponseProvider<object, object>>(new Func<Task<IResponse<object>>>(() => Task.FromResult(response)));
+            var provider = GetPartialMock<FirstResponseProvider<object, object, object>>(new Func<Task<IResponse<object>>>(() => Task.FromResult(response)), new Func<IResponse<object>, IResponse<object>>(r => r));
             provider.Setup(x => x.ProcessResponse(logger, response)).Returns(expected);
             
             // Act
@@ -44,14 +41,13 @@ namespace FluentResponsePipeline.Tests.Unit
             var responseComposer = GetMock<IResponseComposer>();
             responseComposer.Setup(x => x.Error<object>(exception)).Returns(expected);
             
-            var provider = GetPartialMock<FirstResponseProvider<object, object>>(new Func<Task<IResponse<object>>>(() => throw exception));
+            var provider = GetPartialMock<FirstResponseProvider<object, object, object>>(new Func<Task<IResponse<object>>>(() => throw exception), new Func<IResponse<object>, IResponse<object>>(r => r));
             
             // Act
             var result = await provider.GetResult(logger, responseComposer);
             
             // Assert
             result.Should().Be(expected);
-            provider.VerifyNever(x => x.ProcessResponse(It.IsAny<IObjectLogger>(), It.IsAny<IResponse<object>>()));
         }
         
         [Test]
@@ -72,7 +68,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var expected = new object();
             var expectedResult = GetMock<IResponse<decimal>>();
             
-            var provider = GetPartialMock<FirstResponseProvider<decimal, object>>(request);
+            var provider = GetPartialMock<FirstResponseProvider<decimal, decimal, object>>(request, new Func<IResponse<decimal>, IResponse<decimal>>(r => r));
             provider
                 .Setup(x => x.GetResult(logger, responseComposer))
                 .ReturnsAsync(expectedResult);
