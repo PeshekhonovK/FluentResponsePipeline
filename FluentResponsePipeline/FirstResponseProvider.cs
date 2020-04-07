@@ -14,14 +14,14 @@ namespace FluentResponsePipeline
     {
         private Func<Task<IResponse<TRequestResult>>> Request { get; }
         
-        private Func<IResponse<TRequestResult>, IResponse<TResult>> Transform { get; }
+        private Func<IResponse<TRequestResult>, IResponse<TResult>> TransformFunc { get; }
             
         public FirstResponseProvider(Func<Task<IResponse<TRequestResult>>> request, Func<IResponse<TRequestResult>, IResponse<TResult>> transform)
         {
             Debug.Assert(request != null);
                 
             this.Request = request;
-            this.Transform = transform;
+            this.TransformFunc = transform;
         }
         
         public virtual async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
@@ -34,7 +34,7 @@ namespace FluentResponsePipeline
 
                 Debug.Assert(requestResult != null);
                 
-                return this.ProcessResponse(logger, this.Transform(requestResult));
+                return this.ProcessResponse(logger, this.TransformFunc(requestResult));
             }
             catch (Exception e)
             {
@@ -65,7 +65,7 @@ namespace FluentResponsePipeline
             return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response) => response);
         }
 
-        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> AddTransform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
         {
             Debug.Assert(transform != null);
             
@@ -76,7 +76,7 @@ namespace FluentResponsePipeline
 
         public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
         {
-            return this.AddTransform(transform);
+            return this.Transform(transform);
         }
 
         public async Task<TActionResult> Evaluate<TPage>(

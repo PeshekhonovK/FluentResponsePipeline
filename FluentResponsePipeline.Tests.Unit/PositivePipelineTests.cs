@@ -30,7 +30,7 @@ namespace FluentResponsePipeline.Tests.Unit
             
             // Act
             var result = await ResponsePipeline<object>
-                .With(() => Task.FromResult(response))
+                .Get(() => Task.FromResult(response))
                 .Evaluate(page, responseComposer, null, null);
              
             // Assert
@@ -58,7 +58,7 @@ namespace FluentResponsePipeline.Tests.Unit
             
             // Act
             var result = await ResponsePipeline<object>
-                .With(() => Task.FromResult(response))
+                .Get(() => Task.FromResult(response))
                 .Evaluate(page, responseComposer, ((value, p) =>
                 {
                     receivedValue = value;
@@ -92,8 +92,8 @@ namespace FluentResponsePipeline.Tests.Unit
             
             // Act
             var result = await ResponsePipeline<object>
-                .With(() => Task.FromResult(response))
-                .AddTransform(r => transformed)
+                .Get(() => Task.FromResult(response))
+                .Transform(r => transformed)
                 .Evaluate(page, responseComposer, null, null);
              
             // Assert
@@ -121,8 +121,8 @@ namespace FluentResponsePipeline.Tests.Unit
             
             // Act
             var result = await ResponsePipeline<object>
-                .With(() => Task.FromResult(response))
-                .AddTransform(r => transformed)
+                .Get(() => Task.FromResult(response))
+                .Transform(r => transformed)
                 .Evaluate(page, responseComposer, ((value, p) =>
                 {
                     receivedValue = value;

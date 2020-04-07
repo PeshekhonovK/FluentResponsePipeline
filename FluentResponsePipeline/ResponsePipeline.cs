@@ -12,7 +12,7 @@ namespace FluentResponsePipeline
         /// </summary>
         /// <param name="request">Wrapper with a response source call</param>
         /// <typeparam name="TResult">Type of response payload, no restrictions</typeparam>
-        public static IFirstResponseHandler<TResult, TResult, TActionResult> With<TResult>(Func<Task<IResponse<TResult>>> request)
+        public static IFirstResponseHandler<TResult, TResult, TActionResult> Get<TResult>(Func<Task<IResponse<TResult>>> request)
         {
             Debug.Assert(request != null);
 

@@ -16,13 +16,13 @@ namespace FluentResponsePipeline
 
         private Func<TFrom, Task<IResponse<TRequestResult>>> Request { get; }
         
-        private Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> Transform { get; }
+        private Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> TransformFunc { get; }
 
         public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, Task<IResponse<TRequestResult>>> request, Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> transform)
         {
             this.Parent = parent ?? throw new ArgumentNullException(nameof(parent));
             this.Request = request ?? throw new ArgumentNullException(nameof(request));
-            this.Transform = transform ?? throw new ArgumentNullException(nameof(transform));
+            this.TransformFunc = transform ?? throw new ArgumentNullException(nameof(transform));
         }
 
         public IResponseHandler<TResult, TToResult, TToResult, TActionResult> With<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
@@ -64,7 +64,7 @@ namespace FluentResponsePipeline
 
                 var response = await this.GetResponse(parentResult, logger, responseComposer);
 
-                var transformedResult = this.Transform(parentResult, response);
+                var transformedResult = this.TransformFunc(parentResult, response);
 
                 return this.ProcessResponse(logger, transformedResult);
             }
