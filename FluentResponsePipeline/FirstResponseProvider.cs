@@ -30,11 +30,11 @@ namespace FluentResponsePipeline
             
             try
             {
-                var requestResult = await this.GetResponse(logger, responseComposer);
+                var requestResult = this.ProcessResponse(logger,await this.GetResponse(logger, responseComposer));
 
                 Debug.Assert(requestResult != null);
                 
-                return this.ProcessResponse(logger, this.TransformFunc(requestResult));
+                return this.TransformFunc(requestResult);
             }
             catch (Exception e)
             {
@@ -90,7 +90,7 @@ namespace FluentResponsePipeline
                 
             Debug.Assert(result != null);
 
-            return this.ApplyToPage(result, page, onSuccess, onError);
+            return this.ApplyToPage(this.ProcessResponse(page.Logger, result), page, onSuccess, onError);
         }
     }
 }

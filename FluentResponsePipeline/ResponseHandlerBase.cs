@@ -19,7 +19,7 @@ namespace FluentResponsePipeline
             this.IsLocked = true;
         }
         
-        protected internal virtual IResponse<TResult> ProcessResponse(IObjectLogger logger, IResponse<TResult> response)
+        protected internal virtual IResponse<TResponse> ProcessResponse<TResponse>(IObjectLogger logger, IResponse<TResponse> response)
         {
             Debug.Assert(logger != null);
             Debug.Assert(response != null);

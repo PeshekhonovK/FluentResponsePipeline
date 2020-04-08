@@ -222,12 +222,10 @@ namespace FluentResponsePipeline.Tests.Unit
             
             var results = new List<object>();
 
-            var payload = 1000m;
-            var response1 = ResponseStub<decimal>.Success(payload);
+            var response1 = ResponseStub<decimal>.Success(1000m);
             var response2 = ResponseStub<int>.Success(payload2);
-            
-            var transformed1 = new ResponseStub<string>() { Succeeded = true, Payload = payload1 };
-            var transformed2 = new ResponseStub<bool>() { Succeeded = true, Payload = payload3 };
+            var transformed1 = ResponseStub<string>.Success(payload1);
+            var transformed2 = ResponseStub<bool>.Success(payload3);
 
             var responseComposer = GetMock<IResponseComposer>();
             
@@ -265,6 +263,8 @@ namespace FluentResponsePipeline.Tests.Unit
             results[3].Should().BeAssignableTo<IResponse<int>>().And.Match(x => (x as IResponse<int>).Payload == payload2);
             results.Should().HaveCount(4);
             
+            logger.Verify(x => x.LogTrace(response1));
+            logger.Verify(x => x.LogTrace(response2));
             logger.Verify(x => x.LogTrace(It.Is<IResponse<string>>(r => r.Payload == payload1)));
             logger.Verify(x => x.LogTrace(It.Is<IResponse<bool>>(r => r.Payload == payload3)));
         }
@@ -281,12 +281,13 @@ namespace FluentResponsePipeline.Tests.Unit
             const string payload1 = "expected";
 
             const decimal payload0 = 1000m;
-            var response1 = ResponseStub<decimal>.Success(payload0);
-            var response2 = ResponseStub<string>.Success(payload2);
 
             var responseComposer = GetMock<IResponseComposer>();
-            var transformed1 = new ResponseStub<string>() { Succeeded = true, Payload = payload1 };
-            var transformed2 = new ResponseStub<bool>() { Succeeded = true, Payload = payload3 };
+            
+            var response1 = ResponseStub<decimal>.Success(payload0);
+            var response2 = ResponseStub<string>.Success(payload2);
+            var transformed1 = ResponseStub<string>.Success(payload1);
+            var transformed2 = ResponseStub<bool>.Success(payload3);
             
             var logger = GetMock<IObjectLogger>();
             var page = GetMock<IPageModelBase<object>>();
@@ -327,6 +328,8 @@ namespace FluentResponsePipeline.Tests.Unit
             results[4].Should().Be(payload3);
             results.Should().HaveCount(5);
             
+            logger.Verify(x => x.LogTrace(response1));
+            logger.Verify(x => x.LogTrace(response2));
             logger.Verify(x => x.LogTrace(It.Is<IResponse<string>>(r => r.Payload == payload1)));
             logger.Verify(x => x.LogTrace(It.Is<IResponse<bool>>(r => r.Payload == payload3)));
         }

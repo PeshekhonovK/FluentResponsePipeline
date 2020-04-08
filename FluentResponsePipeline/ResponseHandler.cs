@@ -55,18 +55,16 @@ namespace FluentResponsePipeline
 
             try
             {
-                var parentResult = await this.Parent.GetResult(logger, responseComposer);
+                var parentResult = this.ProcessResponse(logger, await this.Parent.GetResult(logger, responseComposer));
 
                 if (!parentResult.Succeeded)
                 {
                     return responseComposer.From<TFrom, TResult>(parentResult);
                 }
 
-                var response = await this.GetResponse(parentResult, logger, responseComposer);
+                var response = this.ProcessResponse(logger, await this.GetResponse(parentResult, logger, responseComposer));
 
-                var transformedResult = this.TransformFunc(parentResult, response);
-
-                return this.ProcessResponse(logger, transformedResult);
+                return this.TransformFunc(parentResult, response);
             }
             catch (Exception e)
             {
@@ -83,7 +81,7 @@ namespace FluentResponsePipeline
             {
                 return this.Request != null
                     ? await this.Request(parentResult.Payload)
-                    : throw new InvalidOperationException($"Both Provider is null");
+                    : throw new InvalidOperationException("Provider is null");
             }
             catch (Exception e)
             {
@@ -105,7 +103,7 @@ namespace FluentResponsePipeline
 
             Debug.Assert(result != null);
 
-            return this.ApplyToPage(result, page, onSuccess, onError);
+            return this.ApplyToPage( this.ProcessResponse(page.Logger, result), page, onSuccess, onError);
         }
     }
 }
