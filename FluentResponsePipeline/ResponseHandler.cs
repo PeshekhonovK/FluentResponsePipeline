@@ -25,7 +25,7 @@ namespace FluentResponsePipeline
             this.TransformFunc = transform ?? throw new ArgumentNullException(nameof(transform));
         }
 
-        public IResponseHandler<TResult, TToResult, TToResult, TActionResult> With<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
+        public IResponseHandler<TResult, TToResult, TToResult, TActionResult> Get<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
         {
             Debug.Assert(request != null);
             
@@ -34,7 +34,7 @@ namespace FluentResponsePipeline
             return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response) => response);
         }
 
-        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> AddTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
         {
             Debug.Assert(transform != null);
             
@@ -45,7 +45,7 @@ namespace FluentResponsePipeline
 
         public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
         {
-            return this.AddTransform(transform);
+            return this.Transform(transform);
         }
 
         public async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)

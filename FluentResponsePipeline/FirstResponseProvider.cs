@@ -56,7 +56,7 @@ namespace FluentResponsePipeline
             }
         }
 
-        public IResponseHandler<TResult, TToResult, TToResult, TActionResult> With<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
+        public IResponseHandler<TResult, TToResult, TToResult, TActionResult> Get<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request)
         {
             Debug.Assert(request != null);
             
