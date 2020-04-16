@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Net;
+using System.Threading.Tasks;
 using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline
@@ -54,6 +55,18 @@ namespace FluentResponsePipeline
             }
 
             return page.Return(response);
+        }
+        
+
+        protected static async Task<IResponse<TResult>> Try(IResponse<TResult> response, Func<TResult, Task<IResponse>> request, IResponseComposer responseComposer, IObjectLogger logger)
+        {
+            var result = await request(response.Payload);
+            
+            logger.LogTrace(result);
+
+            return result.Succeeded 
+                ? response 
+                : responseComposer.From<TResult>(result);
         }
     }
 }

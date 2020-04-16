@@ -14,9 +14,9 @@ namespace FluentResponsePipeline
     {
         private Func<Task<IResponse<TRequestResult>>> Request { get; }
         
-        private Func<IResponse<TRequestResult>, IResponse<TResult>> TransformFunc { get; }
+        private Func<IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> TransformFunc { get; }
             
-        public FirstResponseProvider(Func<Task<IResponse<TRequestResult>>> request, Func<IResponse<TRequestResult>, IResponse<TResult>> transform)
+        public FirstResponseProvider(Func<Task<IResponse<TRequestResult>>> request, Func<IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> transform)
         {
             Debug.Assert(request != null);
                 
@@ -34,7 +34,7 @@ namespace FluentResponsePipeline
 
                 Debug.Assert(requestResult != null);
                 
-                return this.TransformFunc(requestResult);
+                return await this.TransformFunc(requestResult, responseComposer, logger);
             }
             catch (Exception e)
             {
@@ -61,20 +61,29 @@ namespace FluentResponsePipeline
             Debug.Assert(request != null);
             
             this.VerifyAndLock();
-            
-            return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response) => response);
+
+            return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response, composer, logger) => Task.FromResult(response));
         }
 
-        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        public IResponseHandler<TResult, TResult, TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request)
+        {
+            Debug.Assert(request != null);
+            
+            this.VerifyAndLock();
+            
+            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger));
+        }
+
+        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
         {
             Debug.Assert(transform != null);
             
             this.VerifyAndLock();
 
-            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, transform);
+            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, (response, composer, logger) => transform(response));
         }
 
-        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
         {
             return this.Transform(transform);
         }

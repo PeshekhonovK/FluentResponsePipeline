@@ -5,7 +5,7 @@
         <PackageId>FluentResponsePipeline</PackageId>
         <Title>Fluent Response Pipeline</Title>
         <Authors>Konstantin Peshekhonov</Authors>
-        <PackageLicenseExpression >MIT</PackageLicenseExpression>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/PeshekhonovK/FluentResponsePipeline</RepositoryUrl>
         <PackageDescription>Small utility that allows developer to consume multiple HTTP endpoints in fluent manner</PackageDescription>
         <PackageTags>utility http request</PackageTags>

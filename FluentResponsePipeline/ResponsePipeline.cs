@@ -16,7 +16,7 @@ namespace FluentResponsePipeline
         {
             Debug.Assert(request != null);
 
-            return new FirstResponseProvider<TResult, TResult, TActionResult>(request, response => response);
+            return new FirstResponseProvider<TResult, TResult, TActionResult>(request, (response, composer, logger) => Task.FromResult(response));
         }
     }
 }

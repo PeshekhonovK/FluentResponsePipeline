@@ -16,9 +16,9 @@ namespace FluentResponsePipeline
 
         private Func<TFrom, Task<IResponse<TRequestResult>>> Request { get; }
         
-        private Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> TransformFunc { get; }
+        private Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> TransformFunc { get; }
 
-        public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, Task<IResponse<TRequestResult>>> request, Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TResult>> transform)
+        public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, Task<IResponse<TRequestResult>>> request, Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> transform)
         {
             this.Parent = parent ?? throw new ArgumentNullException(nameof(parent));
             this.Request = request ?? throw new ArgumentNullException(nameof(request));
@@ -31,19 +31,28 @@ namespace FluentResponsePipeline
             
             this.VerifyAndLock();
 
-            return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response) => response);
+            return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response, composer, logger) => Task.FromResult(response));
         }
 
-        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        public IResponseHandler<TResult, TResult, TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request)
+        {
+            Debug.Assert(request != null);
+            
+            this.VerifyAndLock();
+            
+            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger));
+        }
+
+        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
         {
             Debug.Assert(transform != null);
             
             this.VerifyAndLock();
 
-            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, transform);
+            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, (source, response, composer, logger) => transform(source, response));
         }
 
-        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponse<TTransformResult>> transform)
+        public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
         {
             return this.Transform(transform);
         }
@@ -64,7 +73,7 @@ namespace FluentResponsePipeline
 
                 var response = this.ProcessResponse(logger, await this.GetResponse(parentResult, logger, responseComposer));
 
-                return this.TransformFunc(parentResult, response);
+                return await this.TransformFunc(parentResult, response, responseComposer, logger);
             }
             catch (Exception e)
             {
