@@ -90,7 +90,7 @@ namespace FluentResponsePipeline.Tests.Unit
             // Act
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
-                .Transform(r => transformed)
+                .Transform(r => Task.FromResult((IResponse<string>)transformed))
                 .Evaluate(page, responseComposer, null, null);
              
             // Assert
@@ -120,7 +120,7 @@ namespace FluentResponsePipeline.Tests.Unit
             // Act
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
-                .Transform(r => transformed)
+                .Transform(r => Task.FromResult((IResponse<string>)transformed))
                 .Evaluate(page, responseComposer, ((value, p) =>
                 {
                     receivedValue = value;

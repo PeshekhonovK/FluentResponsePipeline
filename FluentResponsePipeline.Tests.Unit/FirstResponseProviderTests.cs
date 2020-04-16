@@ -20,7 +20,7 @@ namespace FluentResponsePipeline.Tests.Unit
             
             var expected = GetMock<IResponse<object>>();
             
-            var provider = GetPartialMock<FirstResponseProvider<object, object, object>>(new Func<Task<IResponse<object>>>(() => Task.FromResult(response)), new Func<IResponse<object>, IResponse<object>>(r => r));
+            var provider = GetPartialMock<FirstResponseProvider<object, object, object>>(new Func<Task<IResponse<object>>>(() => Task.FromResult(response)), new Func<IResponse<object>, IResponseComposer, IObjectLogger, Task<IResponse<object>>>((r, _, __) => Task.FromResult(r)));
             provider.Setup(x => x.ProcessResponse(logger, response)).Returns(expected);
             
             // Act
@@ -41,7 +41,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var responseComposer = GetMock<IResponseComposer>();
             responseComposer.Setup(x => x.Error<object>(exception)).Returns(expected);
             
-            var provider = GetPartialMock<FirstResponseProvider<object, object, object>>(new Func<Task<IResponse<object>>>(() => throw exception), new Func<IResponse<object>, IResponse<object>>(r => r));
+            var provider = GetPartialMock<FirstResponseProvider<object, object, object>>(new Func<Task<IResponse<object>>>(() => throw exception), new Func<IResponse<object>, IResponseComposer, IObjectLogger, Task<IResponse<object>>>((r, _, __) => Task.FromResult(r)));
             
             // Act
             var result = await provider.GetResult(logger, responseComposer);
@@ -68,7 +68,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var expected = new object();
             var expectedResult = GetMock<IResponse<decimal>>();
             
-            var provider = GetPartialMock<FirstResponseProvider<decimal, decimal, object>>(request, new Func<IResponse<decimal>, IResponse<decimal>>(r => r));
+            var provider = GetPartialMock<FirstResponseProvider<decimal, decimal, object>>(request, new Func<IResponse<decimal>, IResponseComposer, IObjectLogger, Task<IResponse<decimal>>>((r, _, __) => Task.FromResult(r)));
             provider
                 .Setup(x => x.GetResult(logger, responseComposer))
                 .ReturnsAsync(expectedResult);

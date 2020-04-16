@@ -82,7 +82,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var expected = new object();
             
             const string expectedPayload = "test";
-            var transformed = new ResponseStub<string>() { Succeeded = true, Payload = expectedPayload };
+            var transformed = (IResponse<string>)new ResponseStub<string>() { Succeeded = true, Payload = expectedPayload };
 
             var responseComposer = GetMock<IResponseComposer>();
             
@@ -94,7 +94,7 @@ namespace FluentResponsePipeline.Tests.Unit
             // Act
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
-                .Transform(r => transformed)
+                .Transform(r => Task.FromResult(transformed))
                 .Evaluate(page, responseComposer, null, null);
              
             // Assert
@@ -111,7 +111,7 @@ namespace FluentResponsePipeline.Tests.Unit
             const string expected = "expected";
 
             var responseComposer = GetMock<IResponseComposer>();
-            var transformed = new ResponseStub<string>() { Succeeded = true, Payload = expected };
+            var transformed = (IResponse<string>)new ResponseStub<string>() { Succeeded = true, Payload = expected };
             
             var logger = GetMock<IObjectLogger>();
             var page = GetMock<IPageModelBase<object>>();
@@ -123,7 +123,7 @@ namespace FluentResponsePipeline.Tests.Unit
             // Act
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
-                .Transform(r => transformed)
+                .Transform(r => Task.FromResult(transformed))
                 .Evaluate(page, responseComposer, ((value, p) =>
                 {
                     receivedValue = value;
@@ -240,7 +240,7 @@ namespace FluentResponsePipeline.Tests.Unit
                 .Transform(r =>
                 {
                     results.Add(r);
-                    return transformed1;
+                    return Task.FromResult(transformed1);
                 })
                 .Get(r =>
                 {
@@ -251,7 +251,7 @@ namespace FluentResponsePipeline.Tests.Unit
                 {
                     results.Add(p);
                     results.Add(r);
-                    return transformed2;
+                    return Task.FromResult(transformed2);
                 })
                 .Evaluate(page, responseComposer, null, null);
              
@@ -299,7 +299,7 @@ namespace FluentResponsePipeline.Tests.Unit
                 .Transform(r =>
                 {
                     results.Add(r);
-                    return transformed1;
+                    return Task.FromResult(transformed1);
                 })
                 .Get(r =>
                 {
@@ -310,7 +310,7 @@ namespace FluentResponsePipeline.Tests.Unit
                 {
                     results.Add(p);
                     results.Add(r);
-                    return transformed2;
+                    return Task.FromResult(transformed2);
                 })
                 .Evaluate(page, responseComposer, ((value, p) =>
                 {
