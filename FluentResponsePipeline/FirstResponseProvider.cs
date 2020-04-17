@@ -80,7 +80,12 @@ namespace FluentResponsePipeline
             
             this.VerifyAndLock();
 
-            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, (response, composer, logger) => transform(response));
+            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, (response, composer, logger) => this.Transform(transform, response, logger));
+        }
+
+        private async Task<IResponse<TTransformResult>> Transform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform, IResponse<TRequestResult> response, IObjectLogger logger)
+        {
+            return this.ProcessResponse(logger, await transform(response));
         }
 
         public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
@@ -96,10 +101,10 @@ namespace FluentResponsePipeline
             where TPage : IPageModelBase<TActionResult>
         {
             var result = await this.GetResult(page.Logger, responseComposer);
-                
+            
             Debug.Assert(result != null);
 
-            return this.ApplyToPage(this.ProcessResponse(page.Logger, result), page, onSuccess, onError);
+            return this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }

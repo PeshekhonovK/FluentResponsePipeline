@@ -52,7 +52,12 @@ namespace FluentResponsePipeline
             
             this.VerifyAndLock();
 
-            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, (source, response, composer, logger) => transform(source, response));
+            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, (source, response, composer, logger) => this.Transform(transform, source, response, logger));
+        }
+
+        private  async Task<IResponse<TTransformResult>> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform, IResponse<TFrom> source, IResponse<TRequestResult> response, IObjectLogger logger)
+        {
+            return this.ProcessResponse(logger, await transform(source, response));
         }
 
         public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
@@ -67,7 +72,7 @@ namespace FluentResponsePipeline
 
             try
             {
-                var parentResult = this.ProcessResponse(logger, await this.Parent.GetResult(logger, responseComposer));
+                var parentResult = await this.Parent.GetResult(logger, responseComposer);
 
                 if (!parentResult.Succeeded)
                 {
@@ -115,7 +120,7 @@ namespace FluentResponsePipeline
 
             Debug.Assert(result != null);
 
-            return this.ApplyToPage( this.ProcessResponse(page.Logger, result), page, onSuccess, onError);
+            return this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }
