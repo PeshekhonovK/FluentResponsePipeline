@@ -16,15 +16,17 @@ namespace FluentResponsePipeline.Tests.Unit
         public async Task SingleResponse_ReturnsResult()
         {
             // Arrange
+            const decimal payload = 1000m;
+            
             var response = GetMock<IResponse<decimal>>();
             response.Setup(x => x.Succeeded).Returns(true);
-            response.Setup(x => x.Payload).Returns(1000m);
+            response.Setup(x => x.Payload).Returns(payload);
 
             var expected = new object();
 
             var responseComposer = GetMock<IResponseComposer>();
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(response)).Returns(expected);
@@ -36,7 +38,13 @@ namespace FluentResponsePipeline.Tests.Unit
              
             // Assert
             result.Should().Be(expected);
-            logger.Verify(x => x.LogTrace(response));
+            
+            logger.Trace.Should().Contain(x => x is IResponse<decimal> && ((IResponse<decimal>)x).Succeeded && ((IResponse<decimal>)x).Payload == payload).And.HaveCount(1);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -50,7 +58,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var responseComposer = GetMock<IResponseComposer>();
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(response)).Returns(new object());
@@ -69,7 +77,13 @@ namespace FluentResponsePipeline.Tests.Unit
             // Assert
             result.Should().Be(page);
             receivedValue.Should().Be(expected);
-            logger.Verify(x => x.LogTrace(response));
+            
+            logger.Trace.Should().Contain(response).And.HaveCount(1);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -86,7 +100,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var responseComposer = GetMock<IResponseComposer>();
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(transformed)).Returns(expected);
@@ -99,7 +113,16 @@ namespace FluentResponsePipeline.Tests.Unit
              
             // Assert
             result.Should().Be(expected);
-            logger.Verify(x => x.LogTrace(It.Is<IResponse<string>>(r => r.Payload == expectedPayload)));
+            
+            logger.Trace.Should()
+                .Contain(response)
+                .And.Contain(x => x is IResponse<string> && ((IResponse<string>)x).Succeeded && ((IResponse<string>)x).Payload == expectedPayload)
+                .And.HaveCount(2);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -113,7 +136,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var responseComposer = GetMock<IResponseComposer>();
             var transformed = (IResponse<string>)new ResponseStub<string>() { Succeeded = true, Payload = expected };
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(transformed)).Returns(new object());
@@ -133,7 +156,16 @@ namespace FluentResponsePipeline.Tests.Unit
             // Assert
             result.Should().Be(page);
             receivedValue.Should().Be(expected);
-            logger.Verify(x => x.LogTrace(It.Is<IResponse<string>>(r => r.Payload == expected)));
+            
+            logger.Trace.Should()
+                .Contain(response)
+                .And.Contain(x => x is IResponse<string> && ((IResponse<string>)x).Succeeded && ((IResponse<string>)x).Payload == expected)
+                .And.HaveCount(2);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -149,14 +181,19 @@ namespace FluentResponsePipeline.Tests.Unit
 
             const decimal payload1 = 1000m;
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(response)).Returns(expected);
             
+            var response1 = ResponseStub<decimal>.Success(payload1);
+            
             // Act
             var result = await ResponsePipeline<object>
-                .Get(() => Task.FromResult(ResponseStub<decimal>.Success(payload1)))
+                .Get(() =>
+                {
+                    return Task.FromResult(response1);
+                })
                 .Get(t =>
                 {
                     results.Add(t);
@@ -167,7 +204,16 @@ namespace FluentResponsePipeline.Tests.Unit
             // Assert
             results.Should().Contain(payload1).And.HaveCount(1);
             result.Should().Be(expected);
-            logger.Verify(x => x.LogTrace(response));
+            
+            logger.Trace.Should()
+                .Contain(response)
+                .And.Contain(response1)
+                .And.HaveCount(2);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -185,10 +231,12 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var responseComposer = GetMock<IResponseComposer>();
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(response)).Returns(new object());
+            
+            var response2 = ResponseStub<string>.Success(payload2);
             
             // Act
             var result = await ResponsePipeline<object>
@@ -196,7 +244,7 @@ namespace FluentResponsePipeline.Tests.Unit
                 .Get(t =>
                 {
                     results.Add(t);
-                    return Task.FromResult(ResponseStub<string>.Success(payload2));
+                    return Task.FromResult(response2);
                 })
                 .Evaluate(page, responseComposer, ((value, p) =>
                 {
@@ -207,7 +255,13 @@ namespace FluentResponsePipeline.Tests.Unit
             // Assert
             result.Should().Be(page);
             results.Should().Contain(payload1).And.Contain(payload2).And.HaveCount(2);
-            logger.Verify(x => x.LogTrace(response));
+            
+            logger.Trace.Should().Contain(response).And.Contain(response2).And.HaveCount(2);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -229,7 +283,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var responseComposer = GetMock<IResponseComposer>();
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
             page.Setup(x => x.Return(transformed2)).Returns(expected);
@@ -263,10 +317,17 @@ namespace FluentResponsePipeline.Tests.Unit
             results[3].Should().BeAssignableTo<IResponse<int>>().And.Match(x => (x as IResponse<int>).Payload == payload2);
             results.Should().HaveCount(4);
             
-            logger.Verify(x => x.LogTrace(response1));
-            logger.Verify(x => x.LogTrace(response2));
-            logger.Verify(x => x.LogTrace(It.Is<IResponse<string>>(r => r.Payload == payload1)));
-            logger.Verify(x => x.LogTrace(It.Is<IResponse<bool>>(r => r.Payload == payload3)));
+            logger.Trace.Should()
+                .Contain(response1)
+                .And.Contain(response2)
+                .And.Contain(transformed1)
+                .And.Contain(transformed2)
+                .And.HaveCount(4);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
@@ -289,7 +350,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var transformed1 = ResponseStub<string>.Success(payload1);
             var transformed2 = ResponseStub<bool>.Success(payload3);
             
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Logger).Returns(logger);
 
@@ -328,10 +389,65 @@ namespace FluentResponsePipeline.Tests.Unit
             results[4].Should().Be(payload3);
             results.Should().HaveCount(5);
             
-            logger.Verify(x => x.LogTrace(response1));
-            logger.Verify(x => x.LogTrace(response2));
-            logger.Verify(x => x.LogTrace(It.Is<IResponse<string>>(r => r.Payload == payload1)));
-            logger.Verify(x => x.LogTrace(It.Is<IResponse<bool>>(r => r.Payload == payload3)));
+            logger.Trace.Should()
+                .Contain(response1)
+                .And.Contain(response2)
+                .And.Contain(transformed1)
+                .And.Contain(transformed2)
+                .And.HaveCount(4);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
+        }
+        
+        [Test]
+        public async Task SingleResponse_WithSuccessTry_ReturnsResult()
+        {
+            // Arrange
+            const decimal payload = 1000m;
+            
+            var response = GetMock<IResponse<decimal>>();
+            response.Setup(x => x.Succeeded).Returns(true);
+            response.Setup(x => x.Payload).Returns(payload);
+
+            var results = new List<object>();
+
+            var expected = new object();
+
+            var responseComposer = GetMock<IResponseComposer>();
+            
+            var positiveTry = ResponseStub.Success();
+            
+            var logger = new LoggerStub();
+            var page = GetMock<IPageModelBase<object>>();
+            page.Setup(x => x.Logger).Returns(logger);
+            page.Setup(x => x.Return(response)).Returns(expected);
+            
+            // Act
+            var result = await ResponsePipeline<object>
+                .Get(() => Task.FromResult(response))
+                .Try(r =>
+                {
+                    results.Add(r);
+                    return Task.FromResult(positiveTry);
+                })
+                .Evaluate(page, responseComposer, null, null);
+             
+            // Assert
+            result.Should().Be(expected);
+            results.Should().Contain(payload).And.HaveCount(1);
+            
+            logger.Trace.Should()
+                .Contain(response)
+                .And.Contain(positiveTry)
+                .And.HaveCount(2);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using FluentAssertions;
+using FluentResponsePipeline.Contracts.Internal;
 using FluentResponsePipeline.Contracts.Public;
 using Moq;
 using NUnit.Framework;
@@ -13,7 +14,7 @@ namespace FluentResponsePipeline.Tests.Unit
         public void ProcessResponse_Error_Logs()
         {
             // Arrange
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
 
             var response = GetMock<IResponse<object>>();
             response.Setup(x => x.Succeeded).Returns(false);
@@ -25,15 +26,20 @@ namespace FluentResponsePipeline.Tests.Unit
             
             // Assert
             result.Should().Be(response);
-            logger.Verify(x => x.LogError(response));
-            logger.VerifyNever(x => x.LogTrace(response));
+            
+            logger.Trace.Should().BeEmpty();
+            logger.Error.Should().Contain(response).And.HaveCount(1);
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
         
         [Test]
         public void ProcessResponse_Success_LogsTrace()
         {
             // Arrange
-            var logger = GetMock<IObjectLogger>();
+            var logger = new LoggerStub();
 
             var response = GetMock<IResponse<object>>();
             response.Setup(x => x.Succeeded).Returns(true);
@@ -45,10 +51,38 @@ namespace FluentResponsePipeline.Tests.Unit
             
             // Assert
             result.Should().Be(response);
-            logger.Verify(x => x.LogTrace(response));
-            logger.VerifyNever(x => x.LogError(response));
+            
+            logger.Trace.Should().Contain(response).And.HaveCount(1);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
         }
+        [Test]
+        public void ProcessResponse_EmptyResponse_LogsNothing()
+        {
+            // Arrange
+            var logger = new LoggerStub();
 
+            var response = new EmptyResponse<object>();
+
+            var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
+            
+            // Act
+            var result = handler.ProcessResponse(logger, response);
+            
+            // Assert
+            result.Should().Be(response);
+            
+            logger.Trace.Should().BeEmpty();
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
+        }
+        
         [TestCase(true)]
         [TestCase(false)]
         public void ApplyToPage_NoCustomHandlers_CallsPageReturn(bool success)
