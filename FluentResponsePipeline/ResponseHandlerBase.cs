@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
+using FluentResponsePipeline.Contracts.Internal;
 using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline
@@ -20,11 +21,22 @@ namespace FluentResponsePipeline
             this.IsLocked = true;
         }
         
-        protected internal virtual IResponse<TResponse> ProcessResponse<TResponse>(IObjectLogger logger, IResponse<TResponse> response)
+        protected internal virtual IResponse<TResponse> ProcessResponse<TResponse>(IObjectLogger logger,
+            IResponse<TResponse> response)
         {
             Debug.Assert(logger != null);
             Debug.Assert(response != null);
                 
+            if (!(response is EmptyResponse<TResponse>))
+            {
+                HandleResponse(logger, response);
+            }
+
+            return response;
+        }
+
+        private static void HandleResponse(IObjectLogger logger, IResponse response)
+        {
             if (!response.Succeeded)
             {
                 logger.LogError(response);
@@ -33,8 +45,6 @@ namespace FluentResponsePipeline
             {
                 logger.LogTrace(response);
             }
-
-            return response;
         }
 
         protected internal virtual TActionResult ApplyToPage<TPage>(
@@ -62,7 +72,7 @@ namespace FluentResponsePipeline
         {
             var result = await request(response.Payload);
             
-            logger.LogTrace(result);
+            HandleResponse(logger, result);
 
             return result.Succeeded 
                 ? response 

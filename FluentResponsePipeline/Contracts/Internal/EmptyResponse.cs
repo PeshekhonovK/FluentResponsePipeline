@@ -5,7 +5,7 @@ using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline.Contracts.Internal
 {
-    public class EmptyResponse<TResult> : IResponse<TResult>
+    internal class EmptyResponse<TResult> : IResponse<TResult>
     {
         private const string Error = "This response is just a stub, you should not ever use it";
         

@@ -18,7 +18,10 @@ namespace FluentResponsePipeline
         
         private Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> TransformFunc { get; }
 
-        public ResponseHandler(IEvaluator<TFrom> parent, Func<TFrom, Task<IResponse<TRequestResult>>> request, Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> transform)
+        public ResponseHandler(
+            IEvaluator<TFrom> parent, 
+            Func<TFrom, Task<IResponse<TRequestResult>>> request,
+            Func<IResponse<TFrom>, IResponse<TRequestResult>, IResponseComposer, IObjectLogger, Task<IResponse<TResult>>> transform)
         {
             this.Parent = parent ?? throw new ArgumentNullException(nameof(parent));
             this.Request = request ?? throw new ArgumentNullException(nameof(request));
