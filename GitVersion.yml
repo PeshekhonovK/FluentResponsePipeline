@@ -1,6 +1,6 @@
 assembly-versioning-scheme: MajorMinorPatchTag
 assembly-file-versioning-scheme: MajorMinorPatch
-mode: ContinuousDelivery
+mode: ContinuousDeployment
 tag-prefix: '[vV]'
 continuous-delivery-fallback-tag: ci
 major-version-bump-message: '\+semver:\s?(breaking|major)'
