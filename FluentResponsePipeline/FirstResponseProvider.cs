@@ -23,6 +23,13 @@ namespace FluentResponsePipeline
             this.Request = request;
             this.TransformFunc = transform;
         }
+
+        private FirstResponseProvider<TRequestResult, TResult, TActionResult> AsTransform()
+        {
+            base.SetTransform();
+
+            return this;
+        }
         
         public virtual async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
@@ -65,13 +72,16 @@ namespace FluentResponsePipeline
             return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response, composer, logger) => Task.FromResult(response));
         }
 
-        public IResponseHandler<TResult, TResult, TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request)
+        public ITryResponseHandler<TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request)
         {
             Debug.Assert(request != null);
             
             this.VerifyAndLock();
+            this.VerifyNotTransform();
+            this.VerifyNotTry();
             
-            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger));
+            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger))
+                .AsTry();
         }
 
         public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
@@ -79,8 +89,11 @@ namespace FluentResponsePipeline
             Debug.Assert(transform != null);
             
             this.VerifyAndLock();
+            this.VerifyNotTransform();
+            this.VerifyNotTry();
 
-            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, (response, composer, logger) => this.Transform(transform, response, logger));
+            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, (response, composer, logger) => this.Transform(transform, response, logger))
+                .AsTransform();
         }
 
         private async Task<IResponse<TTransformResult>> Transform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform, IResponse<TRequestResult> response, IObjectLogger logger)

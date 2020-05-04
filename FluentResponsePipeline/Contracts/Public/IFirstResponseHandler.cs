@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 
 namespace FluentResponsePipeline.Contracts.Public
 {
-    public interface IFirstResponseHandler<out TRequestResult, out TResult, TActionResult> : IBaseResponseHandler<TResult, TActionResult>
+    public interface IFirstResponseHandler<out TRequestResult, out TResult, TActionResult> 
+        : IGetResponseHandler<TResult, TActionResult>
     {
         /// <summary>
         /// Registers method to transform <typeparamref name="TResult"/> to new <typeparamref name="TTransformResult"/>

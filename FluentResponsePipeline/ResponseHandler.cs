@@ -8,6 +8,7 @@ namespace FluentResponsePipeline
 {
     internal class ResponseHandler<TFrom, TRequestResult, TResult, TActionResult> : 
         ResponseHandlerBase<TResult, TActionResult>, 
+        ITryResponseHandler<TResult, TActionResult>,
         IEvaluator<TResult>,
         IResponseHandler<TFrom, TRequestResult, TResult, TActionResult>,
         IResponseHandlerWithTransform<TFrom, TRequestResult, TResult, TActionResult>
@@ -37,13 +38,30 @@ namespace FluentResponsePipeline
             return new ResponseHandler<TResult, TToResult, TToResult, TActionResult>(this, request, (source, response, composer, logger) => Task.FromResult(response));
         }
 
-        public IResponseHandler<TResult, TResult, TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request)
+        private IResponseHandlerWithTransform<TFrom, TRequestResult, TResult, TActionResult> AsTransform()
+        {
+            base.SetTransform();
+
+            return this;
+        }
+
+        public ITryResponseHandler<TResult,TActionResult> AsTry()
+        {
+            base.SetTry();
+
+            return this;
+        }
+
+        public ITryResponseHandler<TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request)
         {
             Debug.Assert(request != null);
             
             this.VerifyAndLock();
+            this.VerifyNotTransform();
+            this.VerifyNotTry();
             
-            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger));
+            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger))
+                .AsTry();
         }
 
         public IResponseHandlerWithTransform<TFrom, TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
@@ -51,10 +69,12 @@ namespace FluentResponsePipeline
             Debug.Assert(transform != null);
             
             this.VerifyAndLock();
+            this.VerifyNotTransform();
+            this.VerifyNotTry();
 
-            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, (source, response, composer, logger) => this.Transform(transform, source, response, logger));
+            return new ResponseHandler<TFrom, TRequestResult, TTransformResult, TActionResult>(this.Parent, this.Request, (source, response, composer, logger) => this.Transform(transform, source, response, logger))
+                .AsTransform();
         }
-
         private  async Task<IResponse<TTransformResult>> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform, IResponse<TFrom> source, IResponse<TRequestResult> response, IObjectLogger logger)
         {
             return this.ProcessResponse(logger, await transform(source, response));

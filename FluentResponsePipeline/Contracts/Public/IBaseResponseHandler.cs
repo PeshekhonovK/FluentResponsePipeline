@@ -12,8 +12,6 @@ namespace FluentResponsePipeline.Contracts.Public
         /// <param name="request">Returns <see cref="IResponse{TToResult}"/> from some kind of data provider</param>
         /// <typeparam name="TToResult">Type of data provided from source</typeparam>
         IResponseHandler<TResult, TToResult, TToResult, TActionResult> Get<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request);
-
-        IResponseHandler<TResult, TResult, TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request);
         
         /// <summary>
         /// Starts recursive evaluation of all chain of <see cref="Get{TToResult}"/> and <see cref="Process"/> methods registered before

@@ -11,6 +11,10 @@ namespace FluentResponsePipeline
     {
         private bool IsLocked { get; set; } = false;
 
+        private bool IsTransform { get; set; } = false;
+
+        private bool IsTry { get; set; } = false;
+
         protected void VerifyAndLock()
         {
             if (this.IsLocked)
@@ -77,6 +81,32 @@ namespace FluentResponsePipeline
             return result.Succeeded 
                 ? response 
                 : responseComposer.From<TResult>(result);
+        }
+
+        protected void SetTransform()
+        {
+            this.IsTransform = true;
+        }
+
+        protected void SetTry()
+        {
+            this.IsTry = true;
+        }
+
+        protected void VerifyNotTransform()
+        {
+            if (this.IsTransform)
+            {
+                throw new InvalidOperationException("This get already has a transform");
+            }
+        }
+
+        protected void VerifyNotTry()
+        {
+            if (this.IsTry)
+            {
+                throw new InvalidOperationException("This get already has a try logic");
+            }
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace FluentResponsePipeline.Contracts.Public
 {
     public interface IResponseHandlerWithTransform<out TParentResult, out TRequestResult, out TResult, TActionResult> 
-        : IBaseResponseHandler<TResult, TActionResult>
+        : IGetResponseHandler<TResult, TActionResult>
     {
         /// <summary>
         /// Replaces transform registered for current handler
