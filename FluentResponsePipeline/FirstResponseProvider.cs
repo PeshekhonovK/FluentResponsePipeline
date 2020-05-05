@@ -77,10 +77,11 @@ namespace FluentResponsePipeline
             Debug.Assert(request != null);
             
             this.VerifyAndLock();
-            this.VerifyNotTransform();
-            this.VerifyNotTry();
             
-            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(this, result => EmptyResponse<TResult>.AsTask(), (source, response, composer, logger) => Try(source, request, composer, logger))
+            return new ResponseHandler<TResult, TResult, TResult, TActionResult>(
+                this, 
+                result => EmptyResponse<TResult>.AsTask(), 
+                (source, response, composer, logger) => Try(source, request, composer, logger))
                 .AsTry();
         }
 
@@ -89,10 +90,12 @@ namespace FluentResponsePipeline
             Debug.Assert(transform != null);
             
             this.VerifyAndLock();
-            this.VerifyNotTransform();
             this.VerifyNotTry();
+            this.VerifyNotTransform();
 
-            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(this.Request, (response, composer, logger) => this.Transform(transform, response, logger))
+            return new FirstResponseProvider<TRequestResult, TTransformResult, TActionResult>(
+                    this.Request, 
+                    (response, composer, logger) => this.Transform(transform, response, logger))
                 .AsTransform();
         }
 

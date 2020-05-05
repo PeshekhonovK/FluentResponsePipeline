@@ -13,6 +13,8 @@ namespace FluentResponsePipeline.Contracts.Public
         /// <typeparam name="TToResult">Type of data provided from source</typeparam>
         IResponseHandler<TResult, TToResult, TToResult, TActionResult> Get<TToResult>(Func<TResult, Task<IResponse<TToResult>>> request);
         
+        ITryResponseHandler<TResult, TActionResult> Try(Func<TResult, Task<IResponse>> request);
+        
         /// <summary>
         /// Starts recursive evaluation of all chain of <see cref="Get{TToResult}"/> and <see cref="Process"/> methods registered before
         /// When result or error is calculated, calls <see cref="onSuccess"/> or <see cref="onError"/> parameters accordingly (if provided) or calls <see cref="IPageModelBase{TActionResult}" /> to process result generically

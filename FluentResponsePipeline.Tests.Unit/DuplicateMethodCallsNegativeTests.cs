@@ -27,42 +27,6 @@ namespace FluentResponsePipeline.Tests.Unit
         }
         
         [Test]
-        public void FirstResponsePipeline_DuplicateTry_ThrowsError()
-        {
-            // Arrange
-            var response = GetMock<IResponse<decimal>>();
-            var tryResponse = GetMock<IResponse>();
-                
-            var withOneTransform = (IResponseHandler<decimal, decimal, decimal, object>)ResponsePipeline<object>
-                .Get(() => Task.FromResult(response))
-                .Try(x => Task.FromResult(tryResponse));
-            
-            // Act
-            var action = new Action(() => withOneTransform.Try(x => Task.FromResult(tryResponse)) );
-
-            // Assert
-            action.Should().Throw<InvalidOperationException>().WithMessage("This get already has a try logic");
-        }
-        
-        [Test]
-        public void FirstResponsePipeline_TryAfterTransform_ThrowsError()
-        {
-            // Arrange
-            var response = GetMock<IResponse<decimal>>();
-            var tryResponse = GetMock<IResponse>();
-            
-            var withOneTransform = (IFirstResponseHandler<decimal, decimal, object>)ResponsePipeline<object>
-                .Get(() => Task.FromResult(response))
-                .Transform(Task.FromResult);
-            
-            // Act
-            var action = new Action(() => withOneTransform.Try(x => Task.FromResult(tryResponse)) );
-
-            // Assert
-            action.Should().Throw<InvalidOperationException>().WithMessage("This get already has a transform");
-        }
-        
-        [Test]
         public void FirstResponsePipeline_TransformAfterTry_ThrowsError()
         {
             // Arrange
@@ -78,6 +42,24 @@ namespace FluentResponsePipeline.Tests.Unit
 
             // Assert
             action.Should().Throw<InvalidOperationException>().WithMessage("This get already has a try logic");
+        }
+        
+        [Test]
+        public void FirstResponsePipeline_DuplicateTransformAfterSecondGet_ThrowsError()
+        {
+            // Arrange
+            var response = GetMock<IResponse<decimal>>();
+            
+            var withOneTransform = (IResponseHandler<decimal, decimal, decimal, object>)ResponsePipeline<object>
+                .Get(() => Task.FromResult(response))
+                .Get((r) => Task.FromResult(response))
+                .Transform((_, r) => Task.FromResult(r));
+            
+            // Act
+            var action = new Action(() => withOneTransform.Transform((_, r) => Task.FromResult(r)));
+
+            // Assert
+            action.Should().Throw<InvalidOperationException>().WithMessage("This get already has a transform");
         }
     }
 }
