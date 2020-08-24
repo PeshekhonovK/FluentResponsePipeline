@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using FluentAssertions;
 using FluentResponsePipeline.Contracts.Internal;
 using FluentResponsePipeline.Contracts.Public;
@@ -85,7 +86,7 @@ namespace FluentResponsePipeline.Tests.Unit
         
         [TestCase(true)]
         [TestCase(false)]
-        public void ApplyToPage_NoCustomHandlers_CallsPageReturn(bool success)
+        public async Task ApplyToPage_NoCustomHandlers_CallsPageReturn(bool success)
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -99,14 +100,14 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page);
+            var result = await handler.ApplyToPage(response, page);
             
             // Assert
             result.Should().Be(expected);
         }
         
         [Test]
-        public void ApplyToPage_Success_CustomHandlerError_CallsPageReturn()
+        public async Task ApplyToPage_Success_CustomHandlerError_CallsPageReturn()
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -114,7 +115,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var expected = new object();
 
-            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, object>((r, o) => new object());
+            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(new object()));
 
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(expected);
@@ -122,14 +123,14 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page, onError: errorHandler);
+            var result = await handler.ApplyToPage(response, page, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
         }
         
         [Test]
-        public void ApplyToPage_Error_CustomHandlerSuccess_CallsPageReturn()
+        public async Task ApplyToPage_Error_CustomHandlerSuccess_CallsPageReturn()
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -137,7 +138,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var expected = new object();
 
-            var successHandler = new Func<object, IPageModelBase<object>, object>((r, o) => new object());
+            var successHandler = new Func<object, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(new object()));
 
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(expected);
@@ -145,14 +146,14 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page, onSuccess: successHandler);
+            var result = await handler.ApplyToPage(response, page, onSuccess: successHandler);
             
             // Assert
             result.Should().Be(expected);
         }
         
         [Test]
-        public void ApplyToPage_Success_CustomHandlerSuccess_CallsHandler()
+        public async Task ApplyToPage_Success_CustomHandlerSuccess_CallsHandler()
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -160,7 +161,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var expected = new object();
 
-            var successHandler = new Func<object, IPageModelBase<object>, object>((r, o) => expected);
+            var successHandler = new Func<object, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(expected));
 
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
@@ -168,14 +169,14 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page, onSuccess: successHandler);
+            var result = await handler.ApplyToPage(response, page, onSuccess: successHandler);
             
             // Assert
             result.Should().Be(expected);
         }
         
         [Test]
-        public void ApplyToPage_Error_CustomHandlerError_CallsHandler()
+        public async Task ApplyToPage_Error_CustomHandlerError_CallsHandler()
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -183,7 +184,7 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var expected = new object();
 
-            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, object>((r, o) => expected);
+            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(expected));
 
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
@@ -191,14 +192,14 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page, onError: errorHandler);
+            var result = await handler.ApplyToPage(response, page, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
         }
         
         [Test]
-        public void ApplyToPage_Success_CustomHandlersBoth_CallsHandler()
+        public async Task ApplyToPage_Success_CustomHandlersBoth_CallsHandler()
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -206,8 +207,8 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var expected = new object();
 
-            var successHandler = new Func<object, IPageModelBase<object>, object>((r, o) => expected);
-            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, object>((r, o) => new object());
+            var successHandler = new Func<object, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(expected));
+            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(new object()));
 
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
@@ -215,14 +216,14 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
+            var result = await handler.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);
         }
         
         [Test]
-        public void ApplyToPage_Error_CustomHandlersBoth_CallsHandler()
+        public async Task ApplyToPage_Error_CustomHandlersBoth_CallsHandler()
         {
             // Arrange
             var response = GetMock<IResponse<object>>();
@@ -230,8 +231,8 @@ namespace FluentResponsePipeline.Tests.Unit
 
             var expected = new object();
 
-            var successHandler = new Func<object, IPageModelBase<object>, object>((r, o) => new object());
-            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, object>((r, o) => expected);
+            var successHandler = new Func<object, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(new object()));
+            var errorHandler = new Func<IResponse<object>, IPageModelBase<object>, Task<object>>((r, o) => Task.FromResult(expected));
 
             var page = GetMock<IPageModelBase<object>>();
             page.Setup(x => x.Return(response)).Returns(new object());
@@ -239,7 +240,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var handler = GetPartialMock<ResponseHandlerBase<object, object>>();
 
             // Act
-            var result = handler.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
+            var result = await handler.ApplyToPage(response, page, onSuccess: successHandler, onError: errorHandler);
             
             // Assert
             result.Should().Be(expected);

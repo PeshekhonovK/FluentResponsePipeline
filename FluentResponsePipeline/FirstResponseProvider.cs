@@ -84,7 +84,6 @@ namespace FluentResponsePipeline
                 (source, response, composer, logger) => Try(source, request, composer, logger))
                 .AsTry();
         }
-
         public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
         {
             Debug.Assert(transform != null);

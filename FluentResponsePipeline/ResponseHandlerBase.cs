@@ -50,21 +50,21 @@ namespace FluentResponsePipeline
             }
         }
 
-        protected internal virtual TActionResult ApplyToPage<TPage>(
+        protected internal virtual async Task<TActionResult> ApplyToPage<TPage>(
             IResponse<TResult> response, 
             TPage page, 
-            Func<TResult, TPage, TActionResult>? onSuccess = null, 
-            Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
+            Func<TResult, TPage, Task<TActionResult>>? onSuccess = null, 
+            Func<IResponse<TResult>, TPage, Task<TActionResult>>? onError = null)
             where TPage : IPageModelBase<TActionResult>
         {
             if (response.Succeeded && onSuccess != null)
             {
-                return onSuccess(response.Payload, page);
+                return await onSuccess(response.Payload, page);
             }
 
             if (!response.Succeeded && onError != null)
             {
-                return onError(response, page);
+                return await onError(response, page);
             }
 
             return page.Return(response);
@@ -116,13 +116,10 @@ namespace FluentResponsePipeline
             Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
             where TPage : IPageModelBase<TActionResult>
         {
-            Debug.Assert(page != null);
-            
-            var result = await this.GetResult(page.Logger, responseComposer);
-            
-            Debug.Assert(result != null);
+            var onSuccessAsync = onSuccess != null ? new Func<TResult, TPage, Task<TActionResult>>((r, p) => Task.FromResult(onSuccess(r, p))) : null;
+            var onErrorAsync = onError != null ? new Func<IResponse<TResult>, TPage, Task<TActionResult>>((r, p) => Task.FromResult(onError(r, p))) : null;
 
-            return this.ApplyToPage(result, page, onSuccess, onError);
+            return await this.Evaluate(page, responseComposer, onSuccessAsync, onErrorAsync);
         }
 
         public async Task<IResponse<TResult>> Evaluate(
@@ -167,6 +164,21 @@ namespace FluentResponsePipeline
             {
                 onError(response);
             }
+        }
+
+        public async Task<TActionResult> Evaluate<TPage>(TPage page, 
+            IResponseComposer responseComposer, 
+            Func<TResult, TPage, Task<TActionResult>>? onSuccess = null, 
+            Func<IResponse<TResult>, TPage, Task<TActionResult>>? onError = null) 
+            where TPage : IPageModelBase<TActionResult>
+        {
+            Debug.Assert(page != null);
+            
+            var result = await this.GetResult(page.Logger, responseComposer);
+            
+            Debug.Assert(result != null);
+
+            return await this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }
