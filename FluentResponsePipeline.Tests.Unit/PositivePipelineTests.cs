@@ -479,5 +479,32 @@ namespace FluentResponsePipeline.Tests.Unit
             logger.Warning.Should().BeEmpty();
             logger.Critical.Should().BeEmpty();
         }
+        
+        [Test]
+        public async Task Execute_SingleResponse_NoPageEvaluate_ReturnsResult()
+        {
+            // Arrange
+            var response = GetMock<IResponse<decimal>>();
+            response.Setup(x => x.Succeeded).Returns(true);
+            const decimal expected = 1000m;
+            response.Setup(x => x.Payload).Returns(expected);
+
+            var responseComposer = GetMock<IResponseComposer>();
+            
+            var logger = new LoggerStub();
+            
+            // Act
+            await ResponsePipeline<decimal>
+                .Get(() => Task.FromResult(response))
+                .Execute(logger, responseComposer);
+             
+            // Assert
+            logger.Trace.Should().Contain(response).And.HaveCount(1);
+            logger.Error.Should().BeEmpty();
+            logger.Debug.Should().BeEmpty();
+            logger.Information.Should().BeEmpty();
+            logger.Warning.Should().BeEmpty();
+            logger.Critical.Should().BeEmpty();
+        }
     }
 }

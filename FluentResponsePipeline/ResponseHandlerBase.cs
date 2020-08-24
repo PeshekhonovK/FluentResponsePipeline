@@ -131,11 +131,42 @@ namespace FluentResponsePipeline
             Func<TResult, IResponse<TResult>>? onSuccess = null,
             Func<IResponse<TResult>, IResponse<TResult>>? onError = null)
         {
-            var result = await this.GetResult(logger, responseComposer);
+            var response = await this.GetResult(logger, responseComposer);
 
-            Debug.Assert(result != null);
+            Debug.Assert(response != null);
+            
+            if (response.Succeeded && onSuccess != null)
+            {
+                return onSuccess(response.Payload);
+            }
 
-            return result;
+            if (!response.Succeeded && onError != null)
+            {
+                return onError(response);
+            }
+
+            return response;
+        }
+
+        public async Task Execute(
+            IObjectLogger logger,
+            IResponseComposer responseComposer,
+            Action<TResult>? onSuccess = null,
+            Action<IResponse<TResult>>? onError = null)
+        {
+            var response = await this.GetResult(logger, responseComposer);
+
+            Debug.Assert(response != null);
+            
+            if (response.Succeeded && onSuccess != null)
+            {
+                onSuccess(response.Payload);
+            }
+
+            if (!response.Succeeded && onError != null)
+            {
+                onError(response);
+            }
         }
     }
 }
