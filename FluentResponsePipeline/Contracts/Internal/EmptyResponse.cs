@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using FluentResponsePipeline.Contracts.Public;
@@ -10,7 +11,8 @@ namespace FluentResponsePipeline.Contracts.Internal
         private const string Error = "This response is just a stub, you should not ever use it";
         
         public bool Succeeded => throw new InvalidOperationException(Error); 
-        public HttpStatusCode StatusCode => throw new InvalidOperationException(Error); 
+        public HttpStatusCode StatusCode => throw new InvalidOperationException(Error);
+        public IEnumerable<string> Messages => throw new InvalidOperationException(Error);
         public string Message => throw new InvalidOperationException(Error); 
         public TResult Payload => throw new InvalidOperationException(Error);
 

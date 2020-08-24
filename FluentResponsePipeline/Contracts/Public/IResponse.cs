@@ -1,3 +1,7 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace FluentResponsePipeline.Contracts.Public
@@ -8,6 +12,8 @@ namespace FluentResponsePipeline.Contracts.Public
         
         public HttpStatusCode StatusCode { get; }
         
+        public IEnumerable<string> Messages { get; }
+
         public string Message { get; }
     }
     

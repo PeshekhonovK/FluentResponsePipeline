@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using FluentResponsePipeline.Contracts.Public;
 
@@ -7,7 +10,8 @@ namespace FluentResponsePipeline.Tests.Unit
     {
         public bool Succeeded { get; set; }
         public HttpStatusCode StatusCode { get; set; }
-        public string Message { get; set; }
+        public IEnumerable<string> Messages { get; set; }
+        public string Message => string.Join(Environment.NewLine, this.Messages ?? Enumerable.Empty<string>());
 
         public static IResponse Success()
         {
@@ -21,7 +25,7 @@ namespace FluentResponsePipeline.Tests.Unit
         {
             return new ResponseStub
             {
-                Message = message,
+                Messages = new List<string> { message },
                 Succeeded = false
             };
         }
@@ -45,7 +49,7 @@ namespace FluentResponsePipeline.Tests.Unit
         {
             return new ResponseStub<TObject>
             {
-                Message = message,
+                Messages = new List<string> { message },
                 Succeeded = false
             };
         }
