@@ -1,13 +1,12 @@
 using System;
 using System.Diagnostics;
-using System.Net;
 using System.Threading.Tasks;
 using FluentResponsePipeline.Contracts.Internal;
 using FluentResponsePipeline.Contracts.Public;
 
 namespace FluentResponsePipeline
 {
-    internal abstract class ResponseHandlerBase<TResult, TActionResult>
+    internal abstract class ResponseHandlerBase<TResult, TActionResult> : IEvaluator<TResult>
     {
         private bool IsLocked { get; set; } = false;
 
@@ -71,7 +70,6 @@ namespace FluentResponsePipeline
             return page.Return(response);
         }
         
-
         protected static async Task<IResponse<TResult>> Try(IResponse<TResult> response, Func<TResult, Task<IResponse>> request, IResponseComposer responseComposer, IObjectLogger logger)
         {
             var result = await request(response.Payload);
@@ -107,6 +105,37 @@ namespace FluentResponsePipeline
             {
                 throw new InvalidOperationException("This get already has a try logic");
             }
+        }
+
+        public abstract Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer);
+
+        public async Task<TActionResult> Evaluate<TPage>(
+            TPage page, 
+            IResponseComposer responseComposer, 
+            Func<TResult, TPage, TActionResult>? onSuccess = null, 
+            Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
+            where TPage : IPageModelBase<TActionResult>
+        {
+            Debug.Assert(page != null);
+            
+            var result = await this.GetResult(page.Logger, responseComposer);
+            
+            Debug.Assert(result != null);
+
+            return this.ApplyToPage(result, page, onSuccess, onError);
+        }
+
+        public async Task<IResponse<TResult>> Evaluate(
+            IObjectLogger logger,
+            IResponseComposer responseComposer,
+            Func<TResult, IResponse<TResult>>? onSuccess = null,
+            Func<IResponse<TResult>, IResponse<TResult>>? onError = null)
+        {
+            var result = await this.GetResult(logger, responseComposer);
+
+            Debug.Assert(result != null);
+
+            return result;
         }
     }
 }

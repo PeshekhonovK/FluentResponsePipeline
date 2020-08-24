@@ -1,6 +1,6 @@
 namespace FluentResponsePipeline.Contracts.Public
 {
-    public interface ITryResponseHandler<out TResult, TActionResult> 
+    public interface ITryResponseHandler<TResult, TActionResult> 
         : IBaseResponseHandler<TResult, TActionResult>
     {
     }

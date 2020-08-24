@@ -31,7 +31,7 @@ namespace FluentResponsePipeline
             return this;
         }
         
-        public virtual async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
+        public override async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(logger != null);
             
@@ -107,20 +107,6 @@ namespace FluentResponsePipeline
         public IFirstResponseHandlerWithTransform<TRequestResult, TTransformResult, TActionResult> ReplaceTransform<TTransformResult>(Func<IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform)
         {
             return this.Transform(transform);
-        }
-
-        public async Task<TActionResult> Evaluate<TPage>(
-            TPage page, 
-            IResponseComposer responseComposer, 
-            Func<TResult, TPage, TActionResult>? onSuccess = null, 
-            Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
-            where TPage : IPageModelBase<TActionResult>
-        {
-            var result = await this.GetResult(page.Logger, responseComposer);
-            
-            Debug.Assert(result != null);
-
-            return this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }

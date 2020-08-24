@@ -9,7 +9,6 @@ namespace FluentResponsePipeline
     internal class ResponseHandler<TFrom, TRequestResult, TResult, TActionResult> : 
         ResponseHandlerBase<TResult, TActionResult>, 
         ITryResponseHandler<TResult, TActionResult>,
-        IEvaluator<TResult>,
         IResponseHandler<TFrom, TRequestResult, TResult, TActionResult>,
         IResponseHandlerWithTransform<TFrom, TRequestResult, TResult, TActionResult>
     {
@@ -89,7 +88,7 @@ namespace FluentResponsePipeline
             return this.Transform(transform);
         }
 
-        public async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
+        public override async Task<IResponse<TResult>> GetResult(IObjectLogger logger, IResponseComposer responseComposer)
         {
             Debug.Assert(this.Parent != null);
             Debug.Assert(this.Request != null);
@@ -129,22 +128,6 @@ namespace FluentResponsePipeline
                 logger.LogCritical(e);
                 return responseComposer.Error<TRequestResult>(e);
             }
-        }
-
-        public async Task<TActionResult> Evaluate<TPage>(
-            TPage page, 
-            IResponseComposer responseComposer, 
-            Func<TResult, TPage, TActionResult>? onSuccess = null, 
-            Func<IResponse<TResult>, TPage, TActionResult>? onError = null)
-            where TPage : IPageModelBase<TActionResult>
-        {
-            Debug.Assert(page != null);
-
-            var result = await this.GetResult(page.Logger, responseComposer);
-
-            Debug.Assert(result != null);
-
-            return this.ApplyToPage(result, page, onSuccess, onError);
         }
     }
 }

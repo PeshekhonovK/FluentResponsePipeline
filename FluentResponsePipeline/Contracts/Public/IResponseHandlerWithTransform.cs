@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace FluentResponsePipeline.Contracts.Public
 {
-    public interface IResponseHandlerWithTransform<out TParentResult, out TRequestResult, out TResult, TActionResult> 
+    public interface IResponseHandlerWithTransform<out TParentResult, out TRequestResult, TResult, TActionResult> 
         : IGetResponseHandler<TResult, TActionResult>
     {
         /// <summary>
