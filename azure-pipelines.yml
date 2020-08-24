@@ -1,38 +1,55 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
-
-trigger:
-- master
-
 pool:
-  vmImage: 'windows-latest'
-
-variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  name: Azure Pipelines
 
 steps:
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
+- task: gittools.gitversion.gitversion-task.GitVersion@5
+  displayName: GitVersion
   inputs:
-    restoreSolution: '$(solution)'
+    configFilePath: GitVersion.yml
 
-- task: VSBuild@1
+- task: DotNetCoreCLI@2
+  displayName: Restore
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: restore
+    projects: '$(Parameters.RestoreBuildProjects)'
 
-- task: VSTest@2
-  inputs:    
-    testAssemblyVer2: |
-     **\$(BuildConfiguration)\**\*.Tests.Unit.dll
-     !**\obj\**
-    platform: '$(BuildPlatform)'
-    pathtoCustomTestAdapters: 'FluentResponsePipeline.Tests.Unit\bin\Release\netcoreapp3.1\'
-    configuration: '$(BuildConfiguration)'
+- powershell: |
+   if ("$(Build.SourceBranch)" -match "refs\/tags\/(.+)") {
+      $version = $Matches[1]
+   }
+   else {
+      $version = "$(GitVersion.MajorMinorPatch)-dev.$(GitVersion.CommitsSinceVersionSource)"
+   }
+   
+   Write-Host $version
+   Write-Host "##vso[build.updatebuildnumber]$version"
+   
+  displayName: 'Set build version'
+
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    projects: '$(Parameters.RestoreBuildProjects)'
+    arguments: '--configuration $(BuildConfiguration) /p:Version=$(Build.BuildNumber)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test'
+  inputs:
+    command: test
+    projects: '$(Parameters.RestoreBuildProjects)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack'
+  inputs:
+    command: pack
+    packagesToPack: FluentResponsePipeline/FluentResponsePipeline.csproj
+    nobuild: true
+    versioningScheme: byEnvVar
+    versionEnvVar: Build.BuildNumber
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
+
