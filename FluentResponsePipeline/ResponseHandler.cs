@@ -78,6 +78,53 @@ namespace FluentResponsePipeline
                     (source, response, composer, logger) => this.Transform(transform, source, response, logger))
                 .AsTransform();
         }
+
+        public IResponseHandlerWithTransform<TFrom, TRequestResult, TCombineResult, TActionResult> Combine<TCombineResult>(Func<TFrom, TRequestResult, TCombineResult> combine)
+        {
+            Debug.Assert(combine != null);
+            
+            this.VerifyAndLock();
+            this.VerifyNotTransform();
+            this.VerifyNotTry();
+
+            return new ResponseHandler<TFrom, TRequestResult, TCombineResult, TActionResult>(
+                    this.Parent, 
+                    this.Request,
+                    (source, response, composer, logger) => Task.FromResult(this.Combine(combine, source, response, logger, composer)))
+                .AsTransform();
+        }
+
+        private IResponse<TCombineResult> Combine<TCombineResult>(Func<TFrom, TRequestResult, TCombineResult> combine,
+            IResponse<TFrom> source, IResponse<TRequestResult> response, IObjectLogger logger,
+            IResponseComposer composer)
+        {
+            return this.ProcessResponse(logger, GetCombineResult(combine, source, response, composer));
+        }
+
+        private static IResponse<TCombineResult> GetCombineResult<TCombineResult>(
+            Func<TFrom, TRequestResult, TCombineResult> combine, IResponse<TFrom> first,
+            IResponse<TRequestResult> second, IResponseComposer composer)
+        {
+            if (!first.Succeeded)
+            {
+                return composer.From<TCombineResult>(second);
+            }
+            
+            if (!second.Succeeded)
+            {
+                return composer.From<TCombineResult>(second);
+            }
+
+            try
+            {
+                return composer.Success(combine(first.Payload, second.Payload));
+            }
+            catch (Exception ex)
+            {
+                return composer.Error<TCombineResult>(ex);
+            }
+        }
+
         private  async Task<IResponse<TTransformResult>> Transform<TTransformResult>(Func<IResponse<TFrom>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform, IResponse<TFrom> source, IResponse<TRequestResult> response, IObjectLogger logger)
         {
             return this.ProcessResponse(logger, await transform(source, response));

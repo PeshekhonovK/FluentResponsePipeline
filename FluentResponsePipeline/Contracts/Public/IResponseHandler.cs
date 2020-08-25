@@ -14,5 +14,7 @@ namespace FluentResponsePipeline.Contracts.Public
         /// <typeparam name="TTransformResult">New result type</typeparam>
         /// <returns>New response handler without possibility to add new transform, but replace existing one</returns>
         IResponseHandlerWithTransform<TParentResult, TRequestResult, TTransformResult, TActionResult> Transform<TTransformResult>(Func<IResponse<TParentResult>, IResponse<TRequestResult>, Task<IResponse<TTransformResult>>> transform);
+        
+        IResponseHandlerWithTransform<TParentResult, TRequestResult, TCombineResult, TActionResult> Combine<TCombineResult>(Func<TParentResult, TRequestResult, TCombineResult> combine);
     }
 }
