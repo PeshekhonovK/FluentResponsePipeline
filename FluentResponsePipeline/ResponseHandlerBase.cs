@@ -119,7 +119,7 @@ namespace FluentResponsePipeline
             var onSuccessAsync = onSuccess != null ? new Func<TResult, TPage, Task<TActionResult>>((r, p) => Task.FromResult(onSuccess(r, p))) : null;
             var onErrorAsync = onError != null ? new Func<IResponse<TResult>, TPage, Task<TActionResult>>((r, p) => Task.FromResult(onError(r, p))) : null;
 
-            return await this.Evaluate(page, responseComposer, onSuccessAsync, onErrorAsync);
+            return await this.EvaluateAsync(page, responseComposer, onSuccessAsync, onErrorAsync);
         }
 
         public async Task<IResponse<TResult>> Evaluate(
@@ -166,7 +166,7 @@ namespace FluentResponsePipeline
             }
         }
 
-        public async Task<TActionResult> Evaluate<TPage>(TPage page, 
+        public async Task<TActionResult> EvaluateAsync<TPage>(TPage page, 
             IResponseComposer responseComposer, 
             Func<TResult, TPage, Task<TActionResult>>? onSuccess = null, 
             Func<IResponse<TResult>, TPage, Task<TActionResult>>? onError = null) 

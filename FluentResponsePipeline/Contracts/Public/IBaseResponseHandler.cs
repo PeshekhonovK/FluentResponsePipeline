@@ -74,7 +74,7 @@ namespace FluentResponsePipeline.Contracts.Public
         /// <param name="onSuccess">Optional success handler</param>
         /// <param name="onError">Optional error handler</param>
         /// <returns></returns>
-        Task<TActionResult> Evaluate<TPage>(
+        Task<TActionResult> EvaluateAsync<TPage>(
             TPage page, 
             IResponseComposer responseComposer, 
             Func<TResult, TPage, Task<TActionResult>>? onSuccess = null, 

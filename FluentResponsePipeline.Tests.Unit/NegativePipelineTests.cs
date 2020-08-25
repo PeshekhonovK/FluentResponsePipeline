@@ -31,7 +31,7 @@ namespace FluentResponsePipeline.Tests.Unit
             // Act
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
@@ -104,7 +104,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
                 .Transform(r => Task.FromResult((IResponse<string>)transformed))
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
@@ -195,7 +195,7 @@ namespace FluentResponsePipeline.Tests.Unit
                     results.Add(r);
                     return Task.FromResult(negativeTry);
                 })
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);

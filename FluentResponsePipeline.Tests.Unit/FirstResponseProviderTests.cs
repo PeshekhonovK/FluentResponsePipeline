@@ -77,7 +77,7 @@ namespace FluentResponsePipeline.Tests.Unit
                 .Returns(Task.FromResult(expected));
             
             // Act
-            var result = await provider.Evaluate(page, responseComposer, null, null);
+            var result = await provider.EvaluateAsync(page, responseComposer, null, null);
             
             // Assert
             result.Should().Be(expected);

@@ -34,7 +34,7 @@ namespace FluentResponsePipeline.Tests.Unit
             // Act
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
@@ -109,7 +109,7 @@ namespace FluentResponsePipeline.Tests.Unit
             var result = await ResponsePipeline<object>
                 .Get(() => Task.FromResult(response))
                 .Transform(r => Task.FromResult(transformed))
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
@@ -199,7 +199,7 @@ namespace FluentResponsePipeline.Tests.Unit
                     results.Add(t);
                     return Task.FromResult(response);
                 })
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             results.Should().Contain(payload1).And.HaveCount(1);
@@ -307,7 +307,7 @@ namespace FluentResponsePipeline.Tests.Unit
                     results.Add(r);
                     return Task.FromResult(transformed2);
                 })
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
@@ -433,7 +433,7 @@ namespace FluentResponsePipeline.Tests.Unit
                     results.Add(r);
                     return Task.FromResult(positiveTry);
                 })
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);

@@ -46,7 +46,7 @@ namespace FluentResponsePipeline.Tests.Unit
                     results.Add(r);
                     return Task.FromResult(positiveTry);
                 })
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
@@ -101,7 +101,7 @@ namespace FluentResponsePipeline.Tests.Unit
                     results.Add(r);
                     return Task.FromResult(positiveTry);
                 })
-                .Evaluate(page, responseComposer, null, null);
+                .EvaluateAsync(page, responseComposer, null, null);
              
             // Assert
             result.Should().Be(expected);
