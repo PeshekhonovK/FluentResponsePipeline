@@ -74,7 +74,6 @@ namespace FluentResponsePipeline.Tests.Unit
             // Arrange
             var expected = new object();
             
-            const decimal payload1 = 1000m;
             const int payload2 = 5000;
             const string payload3 = "test-2";
             const string message1 = "test-error-1";
@@ -134,7 +133,6 @@ namespace FluentResponsePipeline.Tests.Unit
             var expected = new object();
             
             const decimal payload1 = 1000m;
-            const int payload2 = 5000;
             const string payload3 = "test-2";
             const string message1 = "test-error-1";
             const string message2 = "test-error-2";

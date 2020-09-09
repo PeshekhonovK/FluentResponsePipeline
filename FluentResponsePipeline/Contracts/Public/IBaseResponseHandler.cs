@@ -58,11 +58,11 @@ namespace FluentResponsePipeline.Contracts.Public
         /// <param name="onSuccess">Optional success handler</param>
         /// <param name="onError">Optional error handler</param>
         /// <returns></returns>
-        Task Execute(
+        Task<IResponse> Execute(
             IObjectLogger logger,
             IResponseComposer responseComposer,
-            Action<TResult>? onSuccess = null,
-            Action<IResponse<TResult>>? onError = null);
+            Func<TResult, IResponse>? onSuccess = null,
+            Func<IResponse<TResult>, IResponse>? onError = null);
         
         /// <summary>
         /// Starts recursive evaluation of all chain of <see cref="Get{TToResult}"/> and <see cref="Process"/> methods registered before

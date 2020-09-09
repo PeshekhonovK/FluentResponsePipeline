@@ -145,11 +145,11 @@ namespace FluentResponsePipeline
             return response;
         }
 
-        public async Task Execute(
+        public async Task<IResponse> Execute(
             IObjectLogger logger,
             IResponseComposer responseComposer,
-            Action<TResult>? onSuccess = null,
-            Action<IResponse<TResult>>? onError = null)
+            Func<TResult, IResponse>? onSuccess = null,
+            Func<IResponse<TResult>, IResponse>? onError = null)
         {
             var response = await this.GetResult(logger, responseComposer);
 
@@ -157,13 +157,15 @@ namespace FluentResponsePipeline
             
             if (response.Succeeded && onSuccess != null)
             {
-                onSuccess(response.Payload);
+                return onSuccess(response.Payload);
             }
 
             if (!response.Succeeded && onError != null)
             {
-                onError(response);
+                return onError(response);
             }
+
+            return response;
         }
 
         public async Task<TActionResult> EvaluateAsync<TPage>(TPage page, 
